@@ -22,9 +22,10 @@ public class DefaultBookingService implements IBookingService {
     @Override
     public Flux<BookingDTO> findAll() {
         return bookingMongoRepository.findAll()
-                .map(Converter::entityToDto);
+                .map(savedBooking -> new BookingDTO(savedBooking.getId(), savedBooking.getTime(), savedBooking.getDate(), savedBooking.getUser().getId()));
     }
 
+    @Override
     public Mono<BookingDTO> save(BookingDTO bookingDTO) {
         return userService.findById(bookingDTO.getUserId())
                 .flatMap(user -> {

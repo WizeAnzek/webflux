@@ -1,5 +1,6 @@
 package com.prova.webflux.domains;
 
+import com.prova.webflux.dto.BookingDTO;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
@@ -23,8 +24,11 @@ public class User {
     private String name;
     private String email;
 
+
     public User(String name, String email) {
         this.name = name;
         this.email = email;
+
     }
+
 }

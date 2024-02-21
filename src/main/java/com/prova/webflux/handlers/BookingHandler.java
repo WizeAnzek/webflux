@@ -5,6 +5,7 @@ import com.prova.webflux.dto.request.CreateBookingRequestDTO;
 import com.prova.webflux.dto.response.GetBookingsResponseDTO;
 import com.prova.webflux.services.api.IBookingService;
 import com.prova.webflux.dto.response.GetBookingsResponseDTO.GetBookingResponseDTO;
+import com.prova.webflux.services.api.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ public class BookingHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(BookingHandler.class);
 
     private final IBookingService bookingService;
+    private final IUserService userService;
 
     private final ValidatorHandler validatorHandler;
     private final ModelMapper modelMapper;
@@ -65,7 +67,7 @@ public class BookingHandler {
     }*/
 
     public Mono<ServerResponse> save(ServerRequest request) {
-        return request.bodyToMono(CreateBookingRequestDTO.class)
+       return request.bodyToMono(CreateBookingRequestDTO.class)
                 .map(createBookingRequestDTO -> modelMapper.map(createBookingRequestDTO, BookingDTO.class))
                 //.doOnNext(validatorHandler::validate)
                 .flatMap(bookingService::save)
