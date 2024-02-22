@@ -5,7 +5,6 @@ import com.prova.webflux.dto.BookingDTO;
 import com.prova.webflux.repos.BookingMongoRepository;
 import com.prova.webflux.repos.UserMongoRepository;
 import com.prova.webflux.services.api.IBookingService;
-import com.prova.webflux.services.api.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -18,18 +17,12 @@ public class DefaultBookingService implements IBookingService {
 
     private final BookingMongoRepository bookingMongoRepository;
     private final UserMongoRepository userMongoRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     public Flux<BookingDTO> findAll() {
         return bookingMongoRepository.findAll()
-                .map(savedBooking -> {
-                    BookingDTO bookingDTO = new BookingDTO();
-                    bookingDTO.setId(savedBooking.getId());
-                    bookingDTO.setTime(savedBooking.getTime());
-                    bookingDTO.setDate(savedBooking.getDate());
-                    bookingDTO.setUserId(savedBooking.getUser().getId());
-                    return bookingDTO;
-                });
+                .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
     }
 
     @Override
@@ -41,28 +34,15 @@ public class DefaultBookingService implements IBookingService {
                     booking.setTime(bookingDTO.getTime());
                     booking.setUser(user);
                     return bookingMongoRepository.save(booking)
-                            .map(savedBooking -> {
-                                BookingDTO result = new BookingDTO();
-                                result.setId(savedBooking.getId());
-                                result.setTime(savedBooking.getTime());
-                                result.setDate(savedBooking.getDate());
-                                result.setUserId(savedBooking.getUser().getId());
-                                return result;
-                            });
+                            .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
+
                 });
     }
 
     @Override
     public Mono<BookingDTO> findById(String bookingId) {
         return bookingMongoRepository.findById(bookingId)
-                .map(savedBooking -> {
-                    BookingDTO bookingDTO = new BookingDTO();
-                    bookingDTO.setId(savedBooking.getId());
-                    bookingDTO.setTime(savedBooking.getTime());
-                    bookingDTO.setDate(savedBooking.getDate());
-                    bookingDTO.setUserId(savedBooking.getUser().getId());
-                    return bookingDTO;
-                });
+                .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
     }
 
 
@@ -72,18 +52,12 @@ public class DefaultBookingService implements IBookingService {
                 .flatMap(existingBooking -> {
                     existingBooking.setDate(bookingDTO.getDate());
                     existingBooking.setTime(bookingDTO.getTime());
-                    return userMongoRepository.findById(bookingDTO.getUserId())
+                    return userMongoRepository.findById(existingBooking.getUser().getId())
                             .flatMap(user -> {
                                 existingBooking.setUser(user);
                                 return bookingMongoRepository.save(existingBooking)
-                                        .map(savedBooking -> {
-                                            BookingDTO result = new BookingDTO();
-                                            result.setId(id);
-                                            result.setTime(savedBooking.getTime());
-                                            result.setDate(savedBooking.getDate());
-                                            result.setUserId(savedBooking.getUser().getId());
-                                            return result;
-                                        });
+                                        .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
+
                             });
                 });
     }
