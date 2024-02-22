@@ -4,7 +4,6 @@ import com.prova.webflux.domains.User;
 import com.prova.webflux.dto.UserDTO;
 import com.prova.webflux.repos.UserMongoRepository;
 import com.prova.webflux.services.api.IUserService;
-import com.prova.webflux.utils.Converter;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -17,10 +16,11 @@ public class DefaultUserService implements IUserService {
 
     private final UserMongoRepository userMongoRepository;
     private final ModelMapper modelMapper;
+
     @Override
     public Flux<UserDTO> findAll() {
         return userMongoRepository.findAll()
-                .map(Converter::entityToDto);
+                .map(user -> modelMapper.map(user, UserDTO.class));
 
     }
 
@@ -28,12 +28,12 @@ public class DefaultUserService implements IUserService {
     public Mono<UserDTO> save(UserDTO userDTO) {
         User user = new User(userDTO.getName(), userDTO.getEmail());
         return userMongoRepository.save(user)
-                .map(Converter::entityToDto);
+                .map(savedUser -> modelMapper.map(savedUser, UserDTO.class));
     }
 
     public Mono<UserDTO> findById(String userId) {
         return userMongoRepository.findById(userId)
-                .map(Converter::entityToDto);
+                .map(user -> modelMapper.map(user, UserDTO.class));
     }
 
     @Override
@@ -43,7 +43,7 @@ public class DefaultUserService implements IUserService {
                     existingUser.setName(userDTO.getName());
                     existingUser.setEmail(userDTO.getEmail());
                     return userMongoRepository.save(existingUser)
-                            .map(Converter::entityToDto);
+                            .map(user -> modelMapper.map(user, UserDTO.class));
                 });
     }
 
