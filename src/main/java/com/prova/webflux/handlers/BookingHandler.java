@@ -31,7 +31,6 @@ public class BookingHandler {
     private final IBookingService bookingService;
     private final IUserService userService;
 
-    private final ValidatorHandler validatorHandler;
     private final ModelMapper modelMapper;
 
 
@@ -46,34 +45,42 @@ public class BookingHandler {
                 });
     }
 
-/*    public Mono<ServerResponse> findAll(ServerRequest request) {
-        return bookingService.findAll()
-                .collectList()
-                .flatMap(bookings -> {
-                    if (bookings.isEmpty()) {
-                        return ServerResponse.noContent().build();
-                    }
-
-                    List<GetBookingResponseDTO> bookingsList = bookings.stream()
-                            .map(bookingDTO -> {
-                                GetBookingResponseDTO getBookingResponseDTO = new GetBookingResponseDTO();
-                                getBookingResponseDTO.setDate(bookingDTO.getDate());
-                                getBookingResponseDTO.setTime(bookingDTO.getTime());
-                                getBookingResponseDTO.set
-                            }
-
-                )
-                }
-    }*/
-
     public Mono<ServerResponse> save(ServerRequest request) {
        return request.bodyToMono(CreateBookingRequestDTO.class)
                 .map(createBookingRequestDTO -> modelMapper.map(createBookingRequestDTO, BookingDTO.class))
-                //.doOnNext(validatorHandler::validate)
                 .flatMap(bookingService::save)
                 .doOnSuccess(bookingSaved -> LOGGER.info("Booking saved with id: " + bookingSaved.getId()))
                 .doOnError(e -> LOGGER.error("Error in saveBooking method", e))
                 .map(bookingSaved -> UriComponentsBuilder.fromPath(("/{id}")).buildAndExpand(bookingSaved.getId()).toUri())
                 .flatMap(uri -> ServerResponse.created(uri).build());
+    }
+
+    public Mono<ServerResponse> findById(ServerRequest request) {
+        String bookingId = request.pathVariable("id");
+        return bookingService.findById(bookingId)
+                .flatMap(bookingDTO -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(fromValue(bookingDTO)))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> update(ServerRequest request) {
+        String bookingId = request.pathVariable("id");
+        return request.bodyToMono(BookingDTO.class)
+                .flatMap(bookingDTO -> {
+                    bookingDTO.setId(bookingId);
+                    return bookingService.update(bookingId, bookingDTO);
+                })
+                .flatMap(updatedBooking -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(fromValue(updatedBooking)))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> delete(ServerRequest request) {
+        String bookingId = request.pathVariable("id");
+        return bookingService.delete(bookingId)
+                .then(ServerResponse.ok().build())
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 }

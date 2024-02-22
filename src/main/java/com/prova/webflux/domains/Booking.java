@@ -24,12 +24,4 @@ public class Booking {
     @DocumentReference
     private User user;
 
-
-    public Booking(LocalDate date, LocalTime time, User user) {
-        this.date = date;
-        this.time = time;
-        this.user = user;
-    }
-
-
 }

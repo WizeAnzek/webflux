@@ -9,6 +9,7 @@ public interface IUserService {
 
     Flux<UserDTO> findAll();
     Mono<UserDTO> save(UserDTO userDTO);
-
-    Mono<User> findById(String userId);
+    Mono<UserDTO> findById(String userId);
+    Mono<UserDTO> update(String id, UserDTO userDTO);
+    Mono<Void> delete(String userId);
 }

@@ -6,6 +6,7 @@ import com.prova.webflux.repos.UserMongoRepository;
 import com.prova.webflux.services.api.IUserService;
 import com.prova.webflux.utils.Converter;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 public class DefaultUserService implements IUserService {
 
     private final UserMongoRepository userMongoRepository;
+    private final ModelMapper modelMapper;
     @Override
     public Flux<UserDTO> findAll() {
         return userMongoRepository.findAll()
@@ -29,7 +31,24 @@ public class DefaultUserService implements IUserService {
                 .map(Converter::entityToDto);
     }
 
-    public Mono<User> findById(String id) {
-        return userMongoRepository.findById(id);
+    public Mono<UserDTO> findById(String userId) {
+        return userMongoRepository.findById(userId)
+                .map(Converter::entityToDto);
+    }
+
+    @Override
+    public Mono<UserDTO> update(String userId, UserDTO userDTO) {
+        return userMongoRepository.findById(userId)
+                .flatMap(existingUser -> {
+                    existingUser.setName(userDTO.getName());
+                    existingUser.setEmail(userDTO.getEmail());
+                    return userMongoRepository.save(existingUser)
+                            .map(Converter::entityToDto);
+                });
+    }
+
+    @Override
+    public Mono<Void> delete(String userId) {
+        return userMongoRepository.deleteById(userId);
     }
 }

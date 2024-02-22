@@ -24,7 +24,10 @@ public class UserRouter {
         return route()
                 .path("/users", builder -> builder
                         .GET("", userHandler::findAll)
+                        .GET("/{id}", userHandler::findById)
+                        .PUT("/{id}", accept(MediaType.APPLICATION_JSON), userHandler::update)
                         .POST("", accept(MediaType.APPLICATION_JSON), userHandler::save)
+                        .DELETE("/{id}", userHandler::delete)
                 )
                 .build();
     }

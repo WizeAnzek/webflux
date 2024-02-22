@@ -1,5 +1,6 @@
 package com.prova.webflux.handlers;
 
+import com.prova.webflux.dto.BookingDTO;
 import com.prova.webflux.dto.UserDTO;
 import com.prova.webflux.dto.request.CreateUserRequestDTO;
 import com.prova.webflux.dto.response.GetUsersResponseDTO;
@@ -29,7 +30,6 @@ public class UserHandler {
 
     private final IUserService userService;
 
-    private final ValidatorHandler validatorHandler;
     private final ModelMapper modelMapper;
 
 
@@ -44,36 +44,39 @@ public class UserHandler {
                 });
     }
 
-    /*public Mono<ServerResponse> findAll(ServerRequest request) {
-        return userService.findAll()
-                .collectList()
-                .flatMap(users -> {
-                    if (users.isEmpty()) {
-                        return ServerResponse.noContent().build();
-                    }
-                    List<GetUserResponseDTO> usersList = users.stream()
-                            .map(userDTO -> {
-                                GetUserResponseDTO getUserResponseDTO = new GetUserResponseDTO();
-                                getUserResponseDTO.setName(userDTO.getName());
-                                getUserResponseDTO.setEmail(userDTO.getEmail());
-                                return getUserResponseDTO;
-                            })
-                            .toList();
-                    GetUsersResponseDTO getUsersResponseDTO = new GetUsersResponseDTO();
-                    getUsersResponseDTO.setUsers(usersList);
-                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromValue(getUsersResponseDTO));
-                });
-    }*/
-
+    public Mono<ServerResponse> findById(ServerRequest request) {
+        String bookingId = request.pathVariable("id");
+        return userService.findById(bookingId)
+                .flatMap(bookingDTO -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(fromValue(bookingDTO)))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
 
     public Mono<ServerResponse> save(ServerRequest request) {
         return request.bodyToMono(CreateUserRequestDTO.class)
                 .map(createUserRequestDTO -> modelMapper.map(createUserRequestDTO, UserDTO.class))
-                //.doOnNext(validatorHandler::validate)
                 .flatMap(userService::save)
                 .doOnSuccess(userSaved -> LOGGER.info("User saved with id: " + userSaved.getId()))
                 .doOnError(e -> LOGGER.error("Error in saveUser method", e))
                 .map(userSaved -> UriComponentsBuilder.fromPath(("/{id}")).buildAndExpand(userSaved.getId()).toUri())
                 .flatMap(uri -> ServerResponse.created(uri).build());
+    }
+
+    public Mono<ServerResponse> delete(ServerRequest request) {
+        String userId = request.pathVariable("id");
+        return userService.delete(userId)
+                .then(ServerResponse.ok().build())
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> update(ServerRequest request) {
+        String userId = request.pathVariable("id");
+        return request.bodyToMono(UserDTO.class)
+                .flatMap(userDTO -> userService.update(userId, userDTO))
+                .flatMap(updatedUser -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(fromValue(updatedUser)))
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 }

@@ -8,8 +8,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class BookingDTO {
     private String id;
     private LocalTime time;

@@ -12,7 +12,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Configuration
 public class BookingRouter {
 
-    private BookingHandler bookingHandler;
+    private final BookingHandler bookingHandler;
 
     public BookingRouter(BookingHandler bookingHandler) {
         this.bookingHandler = bookingHandler;
@@ -23,7 +23,10 @@ public class BookingRouter {
         return route()
                 .path("/bookings", builder -> builder
                         .GET("", bookingHandler::findAll)
+                        .GET("/{id}", bookingHandler::findById)
+                        .PUT("/{id}", accept(MediaType.APPLICATION_JSON), bookingHandler::update)
                         .POST("", accept(MediaType.APPLICATION_JSON), bookingHandler::save)
+                        .DELETE("/{id}", bookingHandler::delete)
                 )
                 .build();
     }
