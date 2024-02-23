@@ -25,6 +25,7 @@ public class BookingRouter {
                 .path("/bookings", builder -> builder
                         .GET("", bookingHandler::findAll)
                         .GET("/{id}", bookingHandler::findById)
+                        //.GET()
                         .PUT("/{id}", accept(MediaType.APPLICATION_JSON), bookingHandler::update)
                         .POST("", accept(MediaType.APPLICATION_JSON), bookingHandler::save)
                         .DELETE("/{id}", bookingHandler::delete)

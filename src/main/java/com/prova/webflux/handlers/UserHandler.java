@@ -50,7 +50,7 @@ public class UserHandler {
     public Mono<ServerResponse> save(ServerRequest request) {
         return request.bodyToMono(UserDTO.class)
                 .flatMap(userService::save)
-                .doOnSuccess(userSaved -> LOGGER.info("User saved with id: " + userSaved.getId()))
+                .doOnSuccess(userSaved -> LOGGER.info(String.format("User saved with id: %s", userSaved.getId())))
                 .doOnError(e -> LOGGER.error("Error in saveUser method", e))
                 .map(userSaved -> UriComponentsBuilder.fromPath(("/{id}")).buildAndExpand(userSaved.getId()).toUri())
                 .flatMap(uri -> ServerResponse.created(uri).build());

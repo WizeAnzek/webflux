@@ -50,16 +50,14 @@ public class DefaultBookingService implements IBookingService {
     public Mono<BookingDTO> update(String id, BookingDTO bookingDTO) {
         return bookingMongoRepository.findById(id)
                 .flatMap(existingBooking -> {
-                    existingBooking.setDate(bookingDTO.getDate());
-                    existingBooking.setTime(bookingDTO.getTime());
-                    return userMongoRepository.findById(existingBooking.getUser().getId())
-                            .flatMap(user -> {
-                                existingBooking.setUser(user);
-                                return bookingMongoRepository.save(existingBooking)
-                                        .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
+                    existingBooking.setDate(bookingDTO.getDate() == null ? existingBooking.getDate() : bookingDTO.getDate());
+                    existingBooking.setTime(bookingDTO.getTime() == null ? existingBooking.getTime() : bookingDTO.getTime());
+                    return bookingMongoRepository.save(existingBooking);
+                })
+                .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
 
-                            });
-                });
+
+
     }
 
     @Override
