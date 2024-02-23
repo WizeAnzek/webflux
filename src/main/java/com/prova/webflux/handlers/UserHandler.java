@@ -1,11 +1,7 @@
 package com.prova.webflux.handlers;
 
-import com.prova.webflux.dto.BookingDTO;
 import com.prova.webflux.dto.UserDTO;
-import com.prova.webflux.dto.request.CreateUserRequestDTO;
-import com.prova.webflux.dto.response.GetUsersResponseDTO;
 import com.prova.webflux.services.api.IUserService;
-import com.prova.webflux.dto.response.GetUsersResponseDTO.GetUserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -16,8 +12,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
@@ -54,8 +48,7 @@ public class UserHandler {
     }
 
     public Mono<ServerResponse> save(ServerRequest request) {
-        return request.bodyToMono(CreateUserRequestDTO.class)
-                .map(createUserRequestDTO -> modelMapper.map(createUserRequestDTO, UserDTO.class))
+        return request.bodyToMono(UserDTO.class)
                 .flatMap(userService::save)
                 .doOnSuccess(userSaved -> LOGGER.info("User saved with id: " + userSaved.getId()))
                 .doOnError(e -> LOGGER.error("Error in saveUser method", e))
