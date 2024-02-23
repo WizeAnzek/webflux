@@ -28,14 +28,7 @@ public class UserHandler {
 
 
     public Mono<ServerResponse> findAll(ServerRequest request) {
-        return userService.findAll()
-                .collectList()
-                .flatMap(users -> {
-                    if (users.isEmpty()) {
-                        return ServerResponse.noContent().build();
-                    }
-                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromValue(users));
-                });
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(userService.findAll(), UserDTO.class);
     }
 
     public Mono<ServerResponse> findById(ServerRequest request) {
