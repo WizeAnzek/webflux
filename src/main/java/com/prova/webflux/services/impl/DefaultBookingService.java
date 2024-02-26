@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 public class DefaultBookingService implements IBookingService {
@@ -45,6 +47,18 @@ public class DefaultBookingService implements IBookingService {
                 .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
     }
 
+    @Override
+    public Flux<BookingDTO> findByDate(LocalDate bookingDate) {
+        return bookingMongoRepository.findBookingsByDate(bookingDate)
+                .map(booking -> modelMapper.map(booking, BookingDTO.class));
+    }
+
+    @Override
+    public Flux<BookingDTO> findByDateRange(LocalDate fromDate, LocalDate toDate) {
+        return bookingMongoRepository.findBookingsByDateBetween(fromDate, toDate)
+                .map(booking -> modelMapper.map(booking, BookingDTO.class));
+    }
+
 
     @Override
     public Mono<BookingDTO> update(String id, BookingDTO bookingDTO) {
@@ -55,7 +69,6 @@ public class DefaultBookingService implements IBookingService {
                     return bookingMongoRepository.save(existingBooking);
                 })
                 .map(savedBooking -> modelMapper.map(savedBooking, BookingDTO.class));
-
 
 
     }

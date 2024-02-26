@@ -12,6 +12,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
 @Component
@@ -22,26 +25,41 @@ public class BookingHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(BookingHandler.class);
 
     private final IBookingService bookingService;
+    private final CustomWebSocketHandler webSocketHandler;
+
 
 
     public Mono<ServerResponse> findAll(ServerRequest request) {
-        return bookingService.findAll()
-                .collectList()
-                .flatMap(bookings -> {
-                    if (bookings.isEmpty()) {
-                        return ServerResponse.noContent().build();
-                    }
-                    return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(fromValue(bookings));
-                });
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(bookingService.findAll(), BookingDTO.class);
+    }
+
+    public Mono<ServerResponse> findByDate(ServerRequest request) {
+        Optional<String> firstParam = request.queryParam("date");
+        Optional<String> secondParam = request.queryParam("toDate");
+        if (firstParam.isEmpty()) {
+            return ServerResponse.badRequest().build();
+        }
+        LocalDate date = LocalDate.parse(firstParam.get());
+        if (secondParam.isEmpty()) {
+            return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(bookingService.findByDate(date), BookingDTO.class);
+        }
+        LocalDate toDate = LocalDate.parse(secondParam.get());
+        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(bookingService.findByDateRange(date, toDate), BookingDTO.class);
     }
 
     public Mono<ServerResponse> save(ServerRequest request) {
         return request.bodyToMono(BookingDTO.class)
                 .flatMap(bookingService::save)
-                .doOnSuccess(bookingSaved -> LOGGER.info("Booking saved with id: " + bookingSaved.getId()))
+                .doOnSuccess(bookingSaved -> {
+                    LOGGER.info(String.format("Booking saved with id: %s", bookingSaved.getId()));
+                    webSocketHandler.sendMessage("Nuovo booking creato con id: " + bookingSaved.getId());
+                })
                 .doOnError(e -> LOGGER.error("Error in saveBooking method", e))
-                .map(bookingSaved -> UriComponentsBuilder.fromPath(("/{id}")).buildAndExpand(bookingSaved.getId()).toUri())
-                .flatMap(uri -> ServerResponse.created(uri).build());
+                .flatMap(bookingSaved -> ServerResponse.created(
+                                UriComponentsBuilder.fromPath("/{id}")
+                                        .buildAndExpand(bookingSaved.getId())
+                                        .toUri())
+                        .body(Mono.just(bookingSaved), BookingDTO.class));
     }
 
     public Mono<ServerResponse> findById(ServerRequest request) {

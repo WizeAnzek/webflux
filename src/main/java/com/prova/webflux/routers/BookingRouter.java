@@ -12,7 +12,6 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration
 public class BookingRouter {
-
     private final BookingHandler bookingHandler;
 
     public BookingRouter(BookingHandler bookingHandler) {
@@ -25,11 +24,12 @@ public class BookingRouter {
                 .path("/bookings", builder -> builder
                         .GET("", bookingHandler::findAll)
                         .GET("/{id}", bookingHandler::findById)
-                        //.GET()
+                        .GET("/searchByDate/", bookingHandler::findByDate)
                         .PUT("/{id}", accept(MediaType.APPLICATION_JSON), bookingHandler::update)
                         .POST("", accept(MediaType.APPLICATION_JSON), bookingHandler::save)
                         .DELETE("/{id}", bookingHandler::delete)
                 )
                 .build();
     }
+
 }

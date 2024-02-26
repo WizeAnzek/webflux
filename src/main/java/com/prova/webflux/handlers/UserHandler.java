@@ -45,8 +45,11 @@ public class UserHandler {
                 .flatMap(userService::save)
                 .doOnSuccess(userSaved -> LOGGER.info(String.format("User saved with id: %s", userSaved.getId())))
                 .doOnError(e -> LOGGER.error("Error in saveUser method", e))
-                .map(userSaved -> UriComponentsBuilder.fromPath(("/{id}")).buildAndExpand(userSaved.getId()).toUri())
-                .flatMap(uri -> ServerResponse.created(uri).build());
+                .flatMap(userSaved -> ServerResponse.created(
+                                UriComponentsBuilder.fromPath("/{id}")
+                                        .buildAndExpand(userSaved.getId())
+                                        .toUri())
+                        .body(Mono.just(userSaved), UserDTO.class));
     }
 
     public Mono<ServerResponse> delete(ServerRequest request) {
