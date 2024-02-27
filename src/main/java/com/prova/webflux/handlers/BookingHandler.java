@@ -84,6 +84,7 @@ public class BookingHandler {
     public Mono<ServerResponse> delete(ServerRequest request) {
         String bookingId = request.pathVariable("id");
         return bookingService.delete(bookingId)
+                .doOnSuccess(ignored -> webSocketHandler.sendMessage("Booking con id: " + bookingId + " cancellato con successo"))
                 .then(ServerResponse.ok().build())
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
